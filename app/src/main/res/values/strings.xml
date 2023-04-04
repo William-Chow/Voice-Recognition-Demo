@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">Voice</string>
+    <string name="click_on_mic_to_speak">Click on Mic to speak</string>
+    <string name="output_will_appear_here">Output will appear here</string>
+</resources>
