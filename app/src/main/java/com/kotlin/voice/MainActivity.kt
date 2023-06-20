@@ -23,7 +23,7 @@ class MainActivity : AppCompatActivity() {
     // on below line we are creating variables
     // for text view and image view
     private lateinit var outputTV: TextView
-    lateinit var micIV: ImageView
+    private lateinit var micIV: ImageView
 
     private val url = "https://www.google.com/search?client=chrome&q={query}&hl=${Locale.getDefault().language}"
 
