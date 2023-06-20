@@ -12,7 +12,9 @@ import android.widget.Toast
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
-import com.example.voice.R
+import com.google.android.gms.ads.AdRequest
+import com.google.android.gms.ads.AdView
+import com.google.android.gms.ads.MobileAds
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.delay
@@ -24,11 +26,9 @@ class MainActivity : AppCompatActivity() {
     // for text view and image view
     private lateinit var outputTV: TextView
     private lateinit var micIV: ImageView
+    private lateinit var adBannerView : AdView
 
     private val url = "https://www.google.com/search?client=chrome&q={query}&hl=${Locale.getDefault().language}"
-
-    // on below line we are creating a constant value
-    private val REQUEST_CODE_SPEECH_INPUT = 1
 
     private lateinit var someActivityResultLauncher: ActivityResultLauncher<Intent>
 
@@ -36,6 +36,10 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+
+        MobileAds.initialize(this)
+        adBannerView = findViewById(R.id.adView)
+        adBannerView.loadAd(AdRequest.Builder().build())
 
         someActivityResultLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
                 if (result.resultCode == Activity.RESULT_OK) {

@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "350678992793",
+    "project_id": "fir-features-a4c4f",
+    "storage_bucket": "fir-features-a4c4f.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:350678992793:android:243180606ab278b8713508",
+        "android_client_info": {
+          "package_name": "com.kotlin.voice"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "350678992793-s8f9h6bg4hknj2vds5786m0659t6s9vb.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.kotlin.voice",
+            "certificate_hash": "cbf916310bcfe8d37d4ed1381e676efd4d600cd6"
+          }
+        },
+        {
+          "client_id": "350678992793-7guuo5j516nqs4li1uc53k0s89j6sm01.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCLwkGl9mK7eOh9LZHlhcDfiAphZlO_W6o"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "350678992793-7guuo5j516nqs4li1uc53k0s89j6sm01.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
