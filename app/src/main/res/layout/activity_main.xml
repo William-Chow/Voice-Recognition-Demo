@@ -3,7 +3,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".MainActivity">
+    tools:context="com.kotlin.voice.MainActivity">
 
     <!--creating a simple image view for mic-->
     <ImageView
@@ -26,7 +26,7 @@
         android:textAlignment="center"
         android:textAllCaps="false"
         android:textColor="@color/black"
-        android:textSize="18sp" />
+        android:textSize="13sp" />
 
     <!--creating a text view for displaying
         output on below line-->
