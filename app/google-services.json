@@ -45,17 +45,17 @@
     },
     {
       "client_info": {
-        "mobilesdk_app_id": "1:350678992793:android:e4b6c9ea8450dd86713508",
+        "mobilesdk_app_id": "1:350678992793:android:43070d5b17c07b61713508",
         "android_client_info": {
-          "package_name": "com.movielist"
+          "package_name": "com.movielist.tmdb"
         }
       },
       "oauth_client": [
         {
-          "client_id": "350678992793-1l8purp3uq2f3gte2ternh63kbdu075s.apps.googleusercontent.com",
+          "client_id": "350678992793-8mt7tmkg4q21c8f28dgn9f81160vo03u.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
-            "package_name": "com.movielist",
+            "package_name": "com.movielist.tmdb",
             "certificate_hash": "cbf916310bcfe8d37d4ed1381e676efd4d600cd6"
           }
         },
