@@ -7,6 +7,43 @@
   "client": [
     {
       "client_info": {
+        "mobilesdk_app_id": "1:350678992793:android:e602786c022ea672713508",
+        "android_client_info": {
+          "package_name": "com.kotlin.card"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "350678992793-38566cu37mibosgqdju41pdvg62pob6j.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.kotlin.card",
+            "certificate_hash": "cbf916310bcfe8d37d4ed1381e676efd4d600cd6"
+          }
+        },
+        {
+          "client_id": "350678992793-7guuo5j516nqs4li1uc53k0s89j6sm01.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCLwkGl9mK7eOh9LZHlhcDfiAphZlO_W6o"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "350678992793-7guuo5j516nqs4li1uc53k0s89j6sm01.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
         "mobilesdk_app_id": "1:350678992793:android:243180606ab278b8713508",
         "android_client_info": {
           "package_name": "com.kotlin.voice"
@@ -78,7 +115,8 @@
             }
           ]
         }
-      }
+      },
+      "admob_app_id": "ca-app-pub-4541063798492496~7778027755"
     }
   ],
   "configuration_version": "1"
