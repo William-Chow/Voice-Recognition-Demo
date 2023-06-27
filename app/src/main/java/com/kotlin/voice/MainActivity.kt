@@ -37,7 +37,7 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        MobileAds.initialize(this)
+        MobileAds.initialize(this) { }
         adBannerView = findViewById(R.id.adView)
         adBannerView.loadAd(AdRequest.Builder().build())
 
