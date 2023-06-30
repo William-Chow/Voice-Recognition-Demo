@@ -26,34 +26,38 @@ class MainActivity : AppCompatActivity() {
     // for text view and image view
     private lateinit var outputTV: TextView
     private lateinit var micIV: ImageView
-    private lateinit var adBannerView : AdView
+    private lateinit var adBannerView: AdView
 
     private val url = "https://www.google.com/search?client=chrome&q={query}&hl=${Locale.getDefault().language}"
 
     private lateinit var someActivityResultLauncher: ActivityResultLauncher<Intent>
+
+    private lateinit var inAppUpdate: InAppUpdate
 
     @OptIn(DelicateCoroutinesApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
+        inAppUpdate = InAppUpdate(this)
+
         MobileAds.initialize(this) { }
         adBannerView = findViewById(R.id.adView)
         adBannerView.loadAd(AdRequest.Builder().build())
 
         someActivityResultLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-                if (result.resultCode == Activity.RESULT_OK) {
-                    if (result.data != null) {
-                        val query = result.data?.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS)?.let { if (it.size > 0) it[0] else null } ?: ""
-                        // Log.d("William", "MY_DATA:$query")
-                        outputTV.text = query
-                        GlobalScope.launch {
-                            delay(2000L)
-                            intent(query)
-                        }
+            if (result.resultCode == Activity.RESULT_OK) {
+                if (result.data != null) {
+                    val query = result.data?.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS)?.let { if (it.size > 0) it[0] else null } ?: ""
+                    // Log.d("William", "MY_DATA:$query")
+                    outputTV.text = query
+                    GlobalScope.launch {
+                        delay(2000L)
+                        intent(query)
                     }
                 }
             }
+        }
 
         // initializing variables of list view with their ids.
         outputTV = findViewById(R.id.idTVOutput)
@@ -91,5 +95,20 @@ class MainActivity : AppCompatActivity() {
         } catch (ex: ActivityNotFoundException) {
             Toast.makeText(this@MainActivity, "This application is not found.", Toast.LENGTH_SHORT).show()
         }
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        inAppUpdate.onActivityResult(requestCode, resultCode, data)
+    }
+
+    override fun onResume() {
+        super.onResume()
+        inAppUpdate.onResume()
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        inAppUpdate.onDestroy()
     }
 }
