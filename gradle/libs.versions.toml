@@ -1,16 +1,16 @@
 [versions]
-agp = "8.5.1"
+agp = "8.12.1"
 appUpdate = "2.1.0"
-constraintlayout = "2.1.4"
-coreKtx = "1.13.1"
-firebaseBom = "33.1.2"
+constraintlayout = "2.2.1"
+coreKtx = "1.17.0"
+firebaseBom = "34.1.0"
 junit = "4.13.2"
-junitVersion = "1.2.1"
-espressoCore = "3.6.1"
-appcompat = "1.7.0"
+junitVersion = "1.3.0"
+espressoCore = "3.7.0"
+appcompat = "1.7.1"
 material = "1.12.0"
-playServicesAds = "23.2.0"
-kotlin = "2.0.0"
+playServicesAds = "24.5.0"
+kotlin = "2.2.10"
 
 [libraries]
 app-update = { module = "com.google.android.play:app-update", version.ref = "appUpdate" }
