@@ -1,7 +1,6 @@
 package com.kotlin.voice
 
 import android.app.Activity
-import android.content.Intent
 import android.graphics.Color
 import android.util.Log
 import com.google.android.material.snackbar.Snackbar
@@ -93,7 +92,7 @@ class InAppUpdate(activity: Activity) : InstallStateUpdatedListener {
         }
     }
 
-    fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+    fun onActivityResult(requestCode: Int, resultCode: Int) {
         if (requestCode == requestCodeID) {
             if (resultCode != Activity.RESULT_OK) {
                 // If the update is canceled or fails, you can request to start the update again.

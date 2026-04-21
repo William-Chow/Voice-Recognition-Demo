@@ -3,7 +3,6 @@ package com.kotlin.voice
 import android.app.Activity
 import android.content.ActivityNotFoundException
 import android.content.Intent
-import android.net.Uri
 import android.os.Bundle
 import android.speech.RecognizerIntent
 import android.widget.Toast
@@ -72,14 +71,14 @@ class MainActivity : AppCompatActivity() {
         try {
             val browserIntent = Intent(Intent.ACTION_VIEW, url.replace("{query}", query).toUri())
             startActivity(browserIntent)
-        } catch (ex: ActivityNotFoundException) {
+        } catch (_: ActivityNotFoundException) {
             Toast.makeText(this, "This application is not found.", Toast.LENGTH_SHORT).show()
         }
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
-        inAppUpdate.onActivityResult(requestCode, resultCode, data)
+        inAppUpdate.onActivityResult(requestCode, resultCode)
     }
 
     override fun onResume() {
