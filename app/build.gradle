@@ -1,34 +1,38 @@
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.jetbrains.kotlin.android)
+    alias(libs.plugins.jetbrains.kotlin.compose)
 }
 
 android {
-    namespace 'com.kotlin.voice'
-    compileSdk 36
+    namespace = 'com.kotlin.voice'
+    compileSdk = 36
 
     defaultConfig {
         applicationId "com.kotlin.voice"
-        minSdk 27
-        targetSdk 36
-        versionCode 4
-        versionName "3.1"
+        minSdk = 27
+        targetSdk = 36
+        versionCode = 4
+        versionName = "3.1"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
 
     buildTypes {
         release {
-            minifyEnabled true
+            minifyEnabled = true
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_1_8
-        targetCompatibility JavaVersion.VERSION_1_8
+        sourceCompatibility = JavaVersion.VERSION_1_8
+        targetCompatibility = JavaVersion.VERSION_1_8
     }
     kotlinOptions {
         jvmTarget = '1.8'
+    }
+    buildFeatures {
+        compose = true
     }
 }
 
@@ -41,10 +45,13 @@ dependencies {
     androidTestImplementation libs.espresso.core
 
     implementation libs.core.ktx
-    implementation libs.constraintlayout
-
-    // Import the Firebase BoM
-    implementation platform(libs.firebase.bom)
+    implementation libs.androidx.activity.compose
+    implementation libs.androidx.lifecycle.runtime.ktx
+    implementation platform(libs.androidx.compose.bom)
+    implementation libs.androidx.compose.ui
+    implementation libs.androidx.compose.ui.tooling.preview
+    implementation libs.androidx.compose.material3
+    implementation libs.androidx.compose.material.icons.extended
 
     // Admob
     implementation libs.play.services.ads
@@ -57,4 +64,7 @@ dependencies {
     // Coroutines
     def coroutine_version = '1.8.1'
     implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:$coroutine_version"
+
+    debugImplementation libs.androidx.compose.ui.tooling
+    debugImplementation libs.androidx.compose.ui.test.manifest
 }

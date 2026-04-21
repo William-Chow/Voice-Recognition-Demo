@@ -4,7 +4,6 @@ import android.app.Activity
 import android.content.Intent
 import android.graphics.Color
 import android.util.Log
-import androidx.appcompat.app.AppCompatActivity
 import com.google.android.material.snackbar.Snackbar
 import com.google.android.play.core.appupdate.AppUpdateInfo
 import com.google.android.play.core.appupdate.AppUpdateManager
@@ -73,6 +72,7 @@ class InAppUpdate(activity: Activity) : InstallStateUpdatedListener {
     }
 
 
+    @Suppress("DEPRECATION")
     private fun startUpdate(info: AppUpdateInfo, type: Int) {
         appUpdateManager.startUpdateFlowForResult(info, type, parentActivity, requestCodeID)
         currentType = type
@@ -95,16 +95,17 @@ class InAppUpdate(activity: Activity) : InstallStateUpdatedListener {
 
     fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         if (requestCode == requestCodeID) {
-            if (resultCode != AppCompatActivity.RESULT_OK) {
-                // If the update is cancelled or fails, you can request to start the update again.
+            if (resultCode != Activity.RESULT_OK) {
+                // If the update is canceled or fails, you can request to start the update again.
                 Log.e("ERROR", "Update flow failed! Result code: $resultCode")
             }
         }
     }
 
     private fun flexibleUpdateDownloadCompleted() {
+        val rootView = parentActivity.findViewById<android.view.View>(android.R.id.content)
         Snackbar.make(
-            parentActivity.findViewById(R.id.rlContent),
+            rootView,
             "An update has just been downloaded.",
             Snackbar.LENGTH_INDEFINITE
         ).apply {

@@ -6,94 +6,74 @@ import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import android.speech.RecognizerIntent
-import android.widget.ImageView
-import android.widget.TextView
 import android.widget.Toast
+import androidx.activity.compose.setContent
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
-import com.google.android.gms.ads.AdRequest
-import com.google.android.gms.ads.AdView
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.lifecycle.lifecycleScope
 import com.google.android.gms.ads.MobileAds
-import kotlinx.coroutines.DelicateCoroutinesApi
-import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.util.Locale
+import androidx.core.net.toUri
 
 class MainActivity : AppCompatActivity() {
-    // on below line we are creating variables
-    // for text view and image view
-    private lateinit var outputTV: TextView
-    private lateinit var micIV: ImageView
-    private lateinit var adBannerView: AdView
-
     private val url = "https://www.google.com/search?client=chrome&q={query}&hl=${Locale.getDefault().language}"
-
-    private lateinit var someActivityResultLauncher: ActivityResultLauncher<Intent>
-
+    private lateinit var speechResultLauncher: ActivityResultLauncher<Intent>
     private lateinit var inAppUpdate: InAppUpdate
+    private var outputText by mutableStateOf("")
+    private var searchJob: Job? = null
 
-    @OptIn(DelicateCoroutinesApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
 
         inAppUpdate = InAppUpdate(this)
-
         MobileAds.initialize(this) { }
-        adBannerView = findViewById(R.id.adView)
-        adBannerView.loadAd(AdRequest.Builder().build())
 
-        someActivityResultLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-            if (result.resultCode == Activity.RESULT_OK) {
-                if (result.data != null) {
-                    val query = result.data?.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS)?.let { if (it.size > 0) it[0] else null } ?: ""
-                    // Log.d("William", "MY_DATA:$query")
-                    outputTV.text = query
-                    GlobalScope.launch {
-                        delay(2000L)
-                        intent(query)
-                    }
+        speechResultLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+            if (result.resultCode == Activity.RESULT_OK && result.data != null) {
+                val query = result.data?.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS)?.firstOrNull().orEmpty()
+                outputText = query
+                searchJob?.cancel()
+                searchJob = lifecycleScope.launch {
+                    delay(2000L)
+                    openSearchIntent(query)
                 }
             }
         }
 
-        // initializing variables of list view with their ids.
-        outputTV = findViewById(R.id.idTVOutput)
-        micIV = findViewById(R.id.idIVMic)
-
-        // on below line we are adding on click
-        // listener for mic image view.
-        micIV.setOnClickListener {
-            // on below line we are calling speech recognizer intent.
-            val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH)
-
-            // on below line we are passing language model
-            // and model free form in our intent
-            intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
-
-            // on below line we are passing our
-            // language as a default language.
-            intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, Locale.getDefault())
-
-            // on below line we are specifying a prompt
-            // message as speak to text on below line.
-            intent.putExtra(RecognizerIntent.EXTRA_PROMPT, "Speak to text")
-
-            // on below line we are specifying a try catch block.
-            // in this block we are calling a start activity
-            // for result method and passing our result code.
-            someActivityResultLauncher.launch(intent)
+        setContent {
+            MaterialTheme {
+                VoiceSearchScreen(
+                    outputText = outputText,
+                    onMicClick = ::launchSpeechRecognizer
+                )
+            }
         }
     }
 
-    private fun intent(query: String) {
+    private fun launchSpeechRecognizer() {
+        val speechIntent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
+            putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
+            putExtra(RecognizerIntent.EXTRA_LANGUAGE, Locale.getDefault())
+            putExtra(RecognizerIntent.EXTRA_PROMPT, "Speak to text")
+        }
+        speechResultLauncher.launch(speechIntent)
+    }
+
+    private fun openSearchIntent(query: String) {
+        if (query.isBlank()) return
         try {
-            val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url.replace("{query}", query)))
-            this@MainActivity.startActivity(intent)
+            val browserIntent = Intent(Intent.ACTION_VIEW, url.replace("{query}", query).toUri())
+            startActivity(browserIntent)
         } catch (ex: ActivityNotFoundException) {
-            Toast.makeText(this@MainActivity, "This application is not found.", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "This application is not found.", Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -108,7 +88,8 @@ class MainActivity : AppCompatActivity() {
     }
 
     override fun onDestroy() {
-        super.onDestroy()
+        searchJob?.cancel()
         inAppUpdate.onDestroy()
+        super.onDestroy()
     }
 }
