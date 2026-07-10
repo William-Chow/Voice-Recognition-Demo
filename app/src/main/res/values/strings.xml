@@ -1,13 +1,43 @@
 <resources>
     <string name="app_name">Voice</string>
-    <string name="click_on_mic_to_speak">Click on Mic to speak</string>
-    <string name="output_will_appear_here">Output will appear here</string>
+    <string name="app_title">Voice Search</string>
+
+    <!-- Home / prompts -->
+    <string name="tap_to_speak">Tap the mic and start speaking</string>
+    <string name="listening">Listening…</string>
+    <string name="speak_now">Speak now</string>
     <string name="start_voice_input">Start voice input</string>
-    <string name="speech_prompt">Speak to text</string>
-    <string name="speech_not_supported">Voice input is not available on this device.</string>
-    <string name="browser_not_found">This application is not found.</string>
+    <string name="stop_listening">Stop listening</string>
 
+    <!-- Result -->
+    <string name="your_search">Your search</string>
+    <string name="search">Search</string>
+    <string name="search_now">Search now</string>
+    <string name="cancel">Cancel</string>
+    <string name="auto_search_in">Auto-searching in %1$ds</string>
+    <string name="search_engine">Search engine</string>
 
+    <!-- Actions -->
+    <string name="copy">Copy</string>
+    <string name="copied">Copied to clipboard</string>
+    <string name="share">Share</string>
+    <string name="share_via">Share via</string>
+    <string name="clear_text">Clear</string>
+
+    <!-- History -->
+    <string name="recent_searches">Recent searches</string>
+    <string name="clear_all">Clear all</string>
+    <string name="remove_from_history">Remove from history</string>
+
+    <!-- Errors / permissions -->
+    <string name="permission_needed">Microphone access is needed for voice search.</string>
+    <string name="permission_denied">Microphone permission denied. Enable it in Settings to use voice search.</string>
+    <string name="speech_not_supported">Speech recognition isn\'t available on this device.</string>
+    <string name="speech_no_match">Didn\'t catch that — try again.</string>
+    <string name="speech_error">Something went wrong. Please try again.</string>
+    <string name="browser_not_found">No app found to open the search.</string>
+
+    <!-- AdMob (production; debug overrides in src/debug) -->
     <string name="admob_id">ca-app-pub-4541063798492496~6523983389</string>
     <string name="admob_banner_ad_unit_id">ca-app-pub-4541063798492496/8468109118</string>
 </resources>
