@@ -2,6 +2,10 @@
     <string name="app_name">Voice</string>
     <string name="click_on_mic_to_speak">Click on Mic to speak</string>
     <string name="output_will_appear_here">Output will appear here</string>
+    <string name="start_voice_input">Start voice input</string>
+    <string name="speech_prompt">Speak to text</string>
+    <string name="speech_not_supported">Voice input is not available on this device.</string>
+    <string name="browser_not_found">This application is not found.</string>
 
 
     <string name="admob_id">ca-app-pub-4541063798492496~6523983389</string>

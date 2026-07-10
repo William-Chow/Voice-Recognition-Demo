@@ -1,0 +1,10 @@
+<resources>
+    <!--
+      Debug-only overrides: Google's official AdMob TEST IDs.
+      Debug builds must never serve real ads (AdMob policy / invalid-traffic risk).
+      Production IDs live in src/main/res/values/strings.xml and are used for release builds.
+      https://developers.google.com/admob/android/test-ads
+    -->
+    <string name="admob_id">ca-app-pub-3940256099942544~3347511713</string>
+    <string name="admob_banner_ad_unit_id">ca-app-pub-3940256099942544/6300978111</string>
+</resources>

@@ -51,7 +51,7 @@ fun VoiceSearchScreen(
             ) {
                 Icon(
                     imageVector = Icons.Default.Mic,
-                    contentDescription = stringResource(R.string.app_name)
+                    contentDescription = stringResource(R.string.start_voice_input)
                 )
             }
             Spacer(modifier = Modifier.height(20.dp))

@@ -24,12 +24,7 @@ android {
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
 
-    /*
-    storeFile=app/keystore/weelim-keystore.jks
-    storePassword=weelim
-    keyAlias=weelim
-    keyPassword=weelim
-     */
+    // Signing credentials are loaded from key.properties (git-ignored, not committed).
     signingConfigs {
         release {
             if (keystorePropertiesFile.exists()) {

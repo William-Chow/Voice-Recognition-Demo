@@ -3,6 +3,7 @@ package com.kotlin.voice
 import android.app.Activity
 import android.content.ActivityNotFoundException
 import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import android.speech.RecognizerIntent
 import android.widget.Toast
@@ -60,19 +61,23 @@ class MainActivity : AppCompatActivity() {
     private fun launchSpeechRecognizer() {
         val speechIntent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
             putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
-            putExtra(RecognizerIntent.EXTRA_LANGUAGE, Locale.getDefault())
-            putExtra(RecognizerIntent.EXTRA_PROMPT, "Speak to text")
+            putExtra(RecognizerIntent.EXTRA_LANGUAGE, Locale.getDefault().toLanguageTag())
+            putExtra(RecognizerIntent.EXTRA_PROMPT, getString(R.string.speech_prompt))
         }
-        speechResultLauncher.launch(speechIntent)
+        try {
+            speechResultLauncher.launch(speechIntent)
+        } catch (_: ActivityNotFoundException) {
+            Toast.makeText(this, getString(R.string.speech_not_supported), Toast.LENGTH_SHORT).show()
+        }
     }
 
     private fun openSearchIntent(query: String) {
         if (query.isBlank()) return
         try {
-            val browserIntent = Intent(Intent.ACTION_VIEW, url.replace("{query}", query).toUri())
+            val browserIntent = Intent(Intent.ACTION_VIEW, url.replace("{query}", Uri.encode(query)).toUri())
             startActivity(browserIntent)
         } catch (_: ActivityNotFoundException) {
-            Toast.makeText(this, "This application is not found.", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, getString(R.string.browser_not_found), Toast.LENGTH_SHORT).show()
         }
     }
 
