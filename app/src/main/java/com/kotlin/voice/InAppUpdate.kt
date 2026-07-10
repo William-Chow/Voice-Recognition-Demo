@@ -3,26 +3,38 @@ package com.kotlin.voice
 import android.app.Activity
 import android.graphics.Color
 import android.util.Log
+import androidx.activity.ComponentActivity
+import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.result.IntentSenderRequest
+import androidx.activity.result.contract.ActivityResultContracts
 import com.google.android.material.snackbar.Snackbar
 import com.google.android.play.core.appupdate.AppUpdateInfo
 import com.google.android.play.core.appupdate.AppUpdateManager
 import com.google.android.play.core.appupdate.AppUpdateManagerFactory
+import com.google.android.play.core.appupdate.AppUpdateOptions
 import com.google.android.play.core.install.InstallState
 import com.google.android.play.core.install.InstallStateUpdatedListener
 import com.google.android.play.core.install.model.AppUpdateType
 import com.google.android.play.core.install.model.InstallStatus
 import com.google.android.play.core.install.model.UpdateAvailability
 
-class InAppUpdate(activity: Activity) : InstallStateUpdatedListener {
+class InAppUpdate(private val activity: ComponentActivity) : InstallStateUpdatedListener {
 
-    private var appUpdateManager: AppUpdateManager
-    private val requestCodeID = 500
-    private var parentActivity: Activity = activity
+    private val appUpdateManager: AppUpdateManager = AppUpdateManagerFactory.create(activity)
 
     private var currentType = AppUpdateType.FLEXIBLE
 
+    // Registered before the activity reaches STARTED (constructed in onCreate). Replaces the
+    // deprecated startUpdateFlowForResult(info, type, activity, requestCode) + onActivityResult path.
+    private val updateLauncher: ActivityResultLauncher<IntentSenderRequest> =
+        activity.registerForActivityResult(ActivityResultContracts.StartIntentSenderForResult()) { result ->
+            if (result.resultCode != Activity.RESULT_OK) {
+                // If the update is canceled or fails, you can request to start the update again.
+                Log.e("InAppUpdate", "Update flow failed! Result code: ${result.resultCode}")
+            }
+        }
+
     init {
-        appUpdateManager = AppUpdateManagerFactory.create(parentActivity)
         appUpdateManager.appUpdateInfo.addOnSuccessListener { info ->
             // Check if update is available
             if (info.updateAvailability() == UpdateAvailability.UPDATE_AVAILABLE) { // UPDATE IS AVAILABLE
@@ -70,11 +82,13 @@ class InAppUpdate(activity: Activity) : InstallStateUpdatedListener {
         appUpdateManager.registerListener(this)
     }
 
-
-    @Suppress("DEPRECATION")
     private fun startUpdate(info: AppUpdateInfo, type: Int) {
-        appUpdateManager.startUpdateFlowForResult(info, type, parentActivity, requestCodeID)
         currentType = type
+        appUpdateManager.startUpdateFlowForResult(
+            info,
+            updateLauncher,
+            AppUpdateOptions.newBuilder(type).build(),
+        )
     }
 
     fun onResume() {
@@ -92,17 +106,8 @@ class InAppUpdate(activity: Activity) : InstallStateUpdatedListener {
         }
     }
 
-    fun onActivityResult(requestCode: Int, resultCode: Int) {
-        if (requestCode == requestCodeID) {
-            if (resultCode != Activity.RESULT_OK) {
-                // If the update is canceled or fails, you can request to start the update again.
-                Log.e("ERROR", "Update flow failed! Result code: $resultCode")
-            }
-        }
-    }
-
     private fun flexibleUpdateDownloadCompleted() {
-        val rootView = parentActivity.findViewById<android.view.View>(android.R.id.content)
+        val rootView = activity.findViewById<android.view.View>(android.R.id.content)
         Snackbar.make(
             rootView,
             "An update has just been downloaded.",
@@ -123,6 +128,4 @@ class InAppUpdate(activity: Activity) : InstallStateUpdatedListener {
             flexibleUpdateDownloadCompleted()
         }
     }
-
-
 }

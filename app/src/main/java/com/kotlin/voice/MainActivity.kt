@@ -1,6 +1,5 @@
 package com.kotlin.voice
 
-import android.content.Intent
 import android.os.Bundle
 import androidx.activity.compose.setContent
 import androidx.appcompat.app.AppCompatActivity
@@ -29,11 +28,6 @@ class MainActivity : AppCompatActivity() {
                 VoiceSearchScreen()
             }
         }
-    }
-
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        super.onActivityResult(requestCode, resultCode, data)
-        inAppUpdate.onActivityResult(requestCode, resultCode)
     }
 
     override fun onResume() {
