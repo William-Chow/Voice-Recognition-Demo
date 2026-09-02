@@ -1,0 +1,70 @@
+<resources>
+    <!-- app_name is left untranslated on purpose: it is the brand, not copy. -->
+
+    <!-- Home / prompts -->
+    <string name="app_title">語音搜尋</string>
+    <string name="tap_to_speak">點選麥克風開始說話</string>
+    <string name="listening">聆聽中…</string>
+    <string name="start_voice_input">開始語音輸入</string>
+    <string name="stop_listening">停止聆聽</string>
+
+    <!-- Result -->
+    <string name="your_search">搜尋內容</string>
+    <string name="search">搜尋</string>
+    <string name="search_now">立即搜尋</string>
+    <string name="cancel">取消</string>
+    <string name="auto_search_in">%1$d 秒後自動搜尋</string>
+    <string name="search_engine">搜尋引擎</string>
+
+    <!-- Actions -->
+    <string name="copy">複製</string>
+    <string name="copied">已複製到剪貼簿</string>
+    <string name="share">分享</string>
+    <string name="share_via">分享方式</string>
+    <string name="clear_text">清除</string>
+
+    <!-- History -->
+    <string name="recent_searches">最近搜尋</string>
+    <string name="clear_all">全部清除</string>
+    <string name="remove_from_history">從記錄中移除</string>
+
+    <string name="speech_language">辨識語言</string>
+    <string name="language_follow_app">跟隨應用程式語言</string>
+    <string name="speech_offline_unavailable">無法連線至語音服務。請檢查網路，或安裝離線語言包。</string>
+
+    <!-- First run / empty state -->
+    <string name="empty_title">說出來，自動幫你搜尋</string>
+    <string name="empty_body">說話時文字會即時顯示。停下之後會自動開啟搜尋 —— 你也可以先取消或修改。</string>
+
+    <!-- Settings -->
+    <string name="settings">設定</string>
+    <string name="settings_auto_search">說完後自動搜尋</string>
+    <string name="auto_search_off">關閉</string>
+    <string name="auto_search_seconds">%1$d 秒</string>
+    <string name="settings_appearance">外觀</string>
+    <string name="theme_system">跟隨系統</string>
+    <string name="theme_light">淺色</string>
+    <string name="theme_dark">深色</string>
+    <string name="settings_dynamic_color">使用桌布取色</string>
+    <string name="settings_dynamic_color_body">讓應用程式配色跟隨你的桌布</string>
+
+    <!-- Errors / permissions -->
+    <string name="permission_title">麥克風權限</string>
+    <string name="permission_needed">語音搜尋需要使用麥克風來聽取你說的話，不會錄製或儲存任何內容。</string>
+    <string name="permission_blocked">麥克風權限已關閉，請至系統設定開啟後再使用語音搜尋。</string>
+    <string name="permission_denied">已拒絕麥克風權限，請至系統設定開啟後再使用語音搜尋。</string>
+    <string name="continue_action">繼續</string>
+    <string name="open_settings">開啟設定</string>
+    <string name="not_now">暫不</string>
+    <string name="speech_not_supported">此裝置不支援語音辨識。</string>
+    <string name="speech_no_match">沒有聽清楚，請再說一次。</string>
+    <string name="speech_error">發生問題，請再試一次。</string>
+    <string name="browser_not_found">找不到可開啟搜尋結果的應用程式。</string>
+
+    <!-- In-app update -->
+    <string name="update_downloaded">更新已下載完成。</string>
+    <string name="update_restart">重新啟動</string>
+    <string name="update_failed">更新未能完成。</string>
+    <string name="update_cancelled">已取消更新。</string>
+    <string name="update_retry">重試</string>
+</resources>
