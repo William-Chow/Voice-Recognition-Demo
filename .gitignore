@@ -14,6 +14,9 @@
 .cxx
 local.properties
 
+# Build outputs (never commit release artifacts — they are signed binaries)
+/app/release/
+
 # Signing keys & secrets — NEVER commit these
 key.properties
 *.jks
