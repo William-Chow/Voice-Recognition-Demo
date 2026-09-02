@@ -4,6 +4,14 @@ plugins {
     alias(libs.plugins.jetbrains.kotlin.compose)
 }
 
+// google-services.json is git-ignored (like key.properties), so a fresh clone without it must
+// still build — it just builds without crash reporting.
+def firebaseConfigFile = file("google-services.json")
+if (firebaseConfigFile.exists()) {
+    apply plugin: 'com.google.gms.google-services'
+    apply plugin: 'com.google.firebase.crashlytics'
+}
+
 def keystorePropertiesFile = rootProject.file("key.properties")
 def keystoreProperties = new Properties()
 if (keystorePropertiesFile.exists()) {
@@ -40,6 +48,8 @@ android {
     buildTypes {
         release {
             minifyEnabled = true
+            // R8 already strips unused code; without this the resources it orphans stay in the APK.
+            shrinkResources = true
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
             signingConfig signingConfigs.release
         }
@@ -53,6 +63,13 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
+    }
+    testOptions {
+        // Robolectric needs the merged resources to resolve the strings the ViewModel emits.
+        unitTests {
+            includeAndroidResources = true
+        }
     }
 }
 
@@ -61,10 +78,16 @@ dependencies {
     implementation libs.appcompat
     implementation libs.material
     testImplementation libs.junit
+    testImplementation libs.robolectric
+    testImplementation libs.androidx.test.core
+    testImplementation libs.kotlinx.coroutines.test
     androidTestImplementation libs.ext.junit
     androidTestImplementation libs.espresso.core
+    androidTestImplementation platform(libs.androidx.compose.bom)
+    androidTestImplementation libs.androidx.compose.ui.test.junit4
 
     implementation libs.core.ktx
+    implementation libs.core.splashscreen
     implementation libs.androidx.activity.compose
     implementation libs.androidx.lifecycle.runtime.ktx
     implementation libs.androidx.lifecycle.runtime.compose
@@ -76,8 +99,13 @@ dependencies {
     implementation libs.androidx.compose.material3
     implementation libs.androidx.compose.material.icons.extended
 
-    // Admob
+    // Admob + EEA consent (User Messaging Platform)
     implementation libs.play.services.ads
+    implementation libs.user.messaging.platform
+
+    // Crash reporting
+    implementation platform(libs.firebase.bom)
+    implementation libs.firebase.crashlytics
 
     // In-App Update
     implementation(libs.app.update)

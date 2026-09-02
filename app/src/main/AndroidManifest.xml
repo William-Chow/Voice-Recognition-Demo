@@ -11,6 +11,10 @@
         <intent>
             <action android:name="android.speech.RecognitionService" />
         </intent>
+        <!-- Needed to ask the recognizer which languages it supports. -->
+        <intent>
+            <action android:name="android.speech.action.GET_LANGUAGE_DETAILS" />
+        </intent>
     </queries>
 
     <application
@@ -21,8 +25,9 @@
         android:roundIcon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:supportsRtl="true"
-        android:theme="@style/Theme.Voice"
-        tools:targetApi="31">
+        android:localeConfig="@xml/locales_config"
+        android:theme="@style/Theme.App.Starting"
+        tools:targetApi="33">
         <activity
             android:name="com.kotlin.voice.MainActivity"
             android:exported="true">
@@ -31,6 +36,16 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <!-- Backports the per-app language picker to API < 33 (MainActivity is an AppCompatActivity). -->
+        <service
+            android:name="androidx.appcompat.app.AppLocalesMetadataHolderService"
+            android:enabled="false"
+            android:exported="false">
+            <meta-data
+                android:name="autoStoreLocales"
+                android:value="true" />
+        </service>
 
         <meta-data
             android:name="com.google.android.gms.version"

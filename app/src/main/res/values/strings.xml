@@ -1,11 +1,11 @@
 <resources>
-    <string name="app_name">Voice</string>
+    <!-- The brand name; deliberately identical in every language. -->
+    <string name="app_name" translatable="false">Voice</string>
     <string name="app_title">Voice Search</string>
 
     <!-- Home / prompts -->
     <string name="tap_to_speak">Tap the mic and start speaking</string>
     <string name="listening">Listening…</string>
-    <string name="speak_now">Speak now</string>
     <string name="start_voice_input">Start voice input</string>
     <string name="stop_listening">Stop listening</string>
 
@@ -29,15 +29,47 @@
     <string name="clear_all">Clear all</string>
     <string name="remove_from_history">Remove from history</string>
 
+    <string name="speech_language">Speech language</string>
+    <string name="language_follow_app">Follow app language</string>
+    <string name="speech_offline_unavailable">Couldn\'t reach the speech service. Check your connection, or install an offline language pack.</string>
+
+    <!-- First run / empty state -->
+    <string name="empty_title">Speak, and we\'ll search</string>
+    <string name="empty_body">Your words show up as you talk. When you stop, the search opens on its own — you can cancel or edit it first.</string>
+
+    <!-- Settings -->
+    <string name="settings">Settings</string>
+    <string name="settings_auto_search">Auto-search after speaking</string>
+    <string name="auto_search_off">Off</string>
+    <string name="auto_search_seconds">%1$ds</string>
+    <string name="settings_appearance">Appearance</string>
+    <string name="theme_system">System</string>
+    <string name="theme_light">Light</string>
+    <string name="theme_dark">Dark</string>
+    <string name="settings_dynamic_color">Use wallpaper colours</string>
+    <string name="settings_dynamic_color_body">Match the app to your wallpaper</string>
+
     <!-- Errors / permissions -->
-    <string name="permission_needed">Microphone access is needed for voice search.</string>
+    <string name="permission_title">Microphone access</string>
+    <string name="permission_needed">Voice search needs the microphone to hear what you say. Nothing is recorded or stored.</string>
+    <string name="permission_blocked">Microphone permission is turned off. Enable it in Settings to use voice search.</string>
     <string name="permission_denied">Microphone permission denied. Enable it in Settings to use voice search.</string>
+    <string name="continue_action">Continue</string>
+    <string name="open_settings">Open settings</string>
+    <string name="not_now">Not now</string>
     <string name="speech_not_supported">Speech recognition isn\'t available on this device.</string>
     <string name="speech_no_match">Didn\'t catch that — try again.</string>
     <string name="speech_error">Something went wrong. Please try again.</string>
     <string name="browser_not_found">No app found to open the search.</string>
 
+    <!-- In-app update -->
+    <string name="update_downloaded">An update has just been downloaded.</string>
+    <string name="update_restart">Restart</string>
+    <string name="update_failed">Couldn\'t complete the update.</string>
+    <string name="update_cancelled">Update canceled.</string>
+    <string name="update_retry">Retry</string>
+
     <!-- AdMob (production; debug overrides in src/debug) -->
-    <string name="admob_id">ca-app-pub-4541063798492496~6523983389</string>
-    <string name="admob_banner_ad_unit_id">ca-app-pub-4541063798492496/8468109118</string>
+    <string name="admob_id" translatable="false">ca-app-pub-4541063798492496~6523983389</string>
+    <string name="admob_banner_ad_unit_id" translatable="false">ca-app-pub-4541063798492496/8468109118</string>
 </resources>

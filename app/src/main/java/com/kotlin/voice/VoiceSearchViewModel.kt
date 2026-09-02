@@ -6,6 +6,7 @@ import android.os.Bundle
 import android.speech.RecognitionListener
 import android.speech.RecognizerIntent
 import android.speech.SpeechRecognizer
+import androidx.appcompat.app.AppCompatDelegate
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.Job
@@ -25,13 +26,20 @@ import kotlin.math.ceil
 data class VoiceUiState(
     val query: String = "",
     val partialText: String = "",
-    val engine: SearchEngine = SearchEngine.GOOGLE,
     val isListening: Boolean = false,
     val countdownActive: Boolean = false,
     val countdownProgress: Float = 0f,
     val countdownSecondsLeft: Int = 0,
     val history: List<String> = emptyList(),
+    /** Languages the speech service reports; fewer than two means there is nothing to choose. */
+    val languages: List<SpeechLanguage> = emptyList(),
+    val settings: VoiceSettings = VoiceSettings(),
+    /** False until stored settings arrive, so the UI never paints the wrong theme first. */
+    val settingsLoaded: Boolean = false,
 ) {
+    val engine: SearchEngine get() = settings.engine
+    val languageTag: String? get() = settings.languageTag
+
     /** A committed result exists (not the live, still-changing partial transcript). */
     val hasResult: Boolean get() = query.isNotBlank()
 }
@@ -42,9 +50,11 @@ sealed interface VoiceEffect {
     data class ShowMessage(val message: String) : VoiceEffect
 }
 
-class VoiceSearchViewModel(app: Application) : AndroidViewModel(app), RecognitionListener {
-
-    private val repository = SearchHistoryRepository(app)
+class VoiceSearchViewModel @JvmOverloads constructor(
+    app: Application,
+    // @JvmOverloads keeps the single-argument constructor AndroidViewModelFactory looks for.
+    private val repository: SearchPreferencesRepository = SearchPreferencesRepository(app),
+) : AndroidViewModel(app), RecognitionListener {
 
     private val _uiState = MutableStateFlow(VoiceUiState())
     val uiState: StateFlow<VoiceUiState> = _uiState.asStateFlow()
@@ -62,11 +72,23 @@ class VoiceSearchViewModel(app: Application) : AndroidViewModel(app), Recognitio
     // Set when the user taps Stop so a late onResults/onError from the aborted session is ignored.
     private var aborted = false
 
+    // One on-device retry per session after the online service turns out to be unreachable.
+    private var retriedOffline = false
+
     init {
         viewModelScope.launch {
             repository.history.collect { list ->
                 _uiState.update { it.copy(history = list) }
             }
+        }
+        viewModelScope.launch {
+            repository.settings.collect { stored ->
+                _uiState.update { it.copy(settings = stored, settingsLoaded = true) }
+            }
+        }
+        viewModelScope.launch {
+            val languages = SpeechLanguages.query(getApplication())
+            _uiState.update { it.copy(languages = languages) }
         }
     }
 
@@ -80,6 +102,14 @@ class VoiceSearchViewModel(app: Application) : AndroidViewModel(app), Recognitio
         }
         cancelCountdown()
         aborted = false
+        retriedOffline = false
+        _rms.value = 0f
+        _uiState.update { it.copy(isListening = true, partialText = "", query = "") }
+        startRecognition(preferOffline = false)
+    }
+
+    private fun startRecognition(preferOffline: Boolean) {
+        val context = getApplication<Application>()
         if (recognizer == null) {
             recognizer = SpeechRecognizer.createSpeechRecognizer(context).apply {
                 setRecognitionListener(this@VoiceSearchViewModel)
@@ -87,12 +117,23 @@ class VoiceSearchViewModel(app: Application) : AndroidViewModel(app), Recognitio
         }
         val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
             putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
-            putExtra(RecognizerIntent.EXTRA_LANGUAGE, Locale.getDefault().toLanguageTag())
+            putExtra(RecognizerIntent.EXTRA_LANGUAGE, activeLanguageTag())
             putExtra(RecognizerIntent.EXTRA_PARTIAL_RESULTS, true)
+            // Some recognition services reject requests that don't identify the caller.
+            putExtra(RecognizerIntent.EXTRA_CALLING_PACKAGE, context.packageName)
+            if (preferOffline) putExtra(RecognizerIntent.EXTRA_PREFER_OFFLINE, true)
         }
-        _rms.value = 0f
-        _uiState.update { it.copy(isListening = true, partialText = "", query = "") }
         recognizer?.startListening(intent)
+    }
+
+    /**
+     * The language to transcribe in: the user's explicit pick, else the language the app itself is
+     * running in. Locale.getDefault() alone would ignore a per-app language chosen in Settings.
+     */
+    private fun activeLanguageTag(): String {
+        _uiState.value.languageTag?.let { return it }
+        val appLocales = AppCompatDelegate.getApplicationLocales()
+        return (appLocales[0] ?: Locale.getDefault()).toLanguageTag()
     }
 
     /** User-initiated abort: cancel() (unlike stopListening) does NOT deliver a final result. */
@@ -131,19 +172,32 @@ class VoiceSearchViewModel(app: Application) : AndroidViewModel(app), Recognitio
         }
         val text = firstResult(results).orEmpty()
         _uiState.update { it.copy(isListening = false, partialText = "", query = text) }
-        if (text.isNotBlank()) startCountdown()
+        // With auto-search off the transcript just sits there until the user taps Search.
+        if (text.isNotBlank() && _uiState.value.settings.autoSearchEnabled) startCountdown()
     }
 
     override fun onError(error: Int) {
         _rms.value = 0f
-        _uiState.update { it.copy(isListening = false, partialText = "") }
         if (aborted) {
             // Error from the user-cancelled session (e.g. ERROR_CLIENT) — don't nag with a toast.
             aborted = false
+            _uiState.update { it.copy(isListening = false, partialText = "") }
             return
         }
+        val networkFailure = error == SpeechRecognizer.ERROR_NETWORK ||
+            error == SpeechRecognizer.ERROR_NETWORK_TIMEOUT
+        if (networkFailure && !retriedOffline) {
+            // Airplane mode or dead network: retry once against the on-device model before giving
+            // up. Stays isListening so the UI doesn't flicker between the two attempts.
+            retriedOffline = true
+            startRecognition(preferOffline = true)
+            return
+        }
+        _uiState.update { it.copy(isListening = false, partialText = "") }
         val context = getApplication<Application>()
         val message = when (error) {
+            SpeechRecognizer.ERROR_NETWORK,
+            SpeechRecognizer.ERROR_NETWORK_TIMEOUT -> context.getString(R.string.speech_offline_unavailable)
             SpeechRecognizer.ERROR_NO_MATCH,
             SpeechRecognizer.ERROR_SPEECH_TIMEOUT -> context.getString(R.string.speech_no_match)
             SpeechRecognizer.ERROR_INSUFFICIENT_PERMISSIONS -> context.getString(R.string.permission_denied)
@@ -162,18 +216,19 @@ class VoiceSearchViewModel(app: Application) : AndroidViewModel(app), Recognitio
 
     private fun startCountdown() {
         countdownJob?.cancel()
+        val total = _uiState.value.settings.autoSearchMillis
         countdownJob = viewModelScope.launch {
             var elapsed = 0L
             _uiState.update {
-                it.copy(countdownActive = true, countdownProgress = 1f, countdownSecondsLeft = seconds(COUNTDOWN_MS))
+                it.copy(countdownActive = true, countdownProgress = 1f, countdownSecondsLeft = seconds(total))
             }
-            while (elapsed < COUNTDOWN_MS) {
+            while (elapsed < total) {
                 delay(STEP_MS)
                 elapsed += STEP_MS
-                val remaining = (COUNTDOWN_MS - elapsed).coerceAtLeast(0)
+                val remaining = (total - elapsed).coerceAtLeast(0)
                 _uiState.update {
                     it.copy(
-                        countdownProgress = remaining.toFloat() / COUNTDOWN_MS,
+                        countdownProgress = remaining.toFloat() / total,
                         countdownSecondsLeft = seconds(remaining),
                     )
                 }
@@ -198,7 +253,7 @@ class VoiceSearchViewModel(app: Application) : AndroidViewModel(app), Recognitio
         _uiState.update { it.copy(countdownActive = false, countdownProgress = 0f, countdownSecondsLeft = 0) }
         if (query.isEmpty()) return
         viewModelScope.launch { repository.add(query) }
-        emit(VoiceEffect.OpenUrl(state.engine.urlFor(query)))
+        emit(VoiceEffect.OpenUrl(state.settings.engine.urlFor(query)))
     }
 
     // endregion
@@ -210,8 +265,36 @@ class VoiceSearchViewModel(app: Application) : AndroidViewModel(app), Recognitio
         _uiState.update { it.copy(query = text) }
     }
 
+    fun onLanguageSelected(tag: String?) {
+        updateSettings({ it.copy(languageTag = tag) }) { repository.setLanguageTag(tag) }
+    }
+
     fun onEngineSelected(engine: SearchEngine) {
-        _uiState.update { it.copy(engine = engine) }
+        updateSettings({ it.copy(engine = engine) }) { repository.setEngine(engine) }
+    }
+
+    fun onThemeModeSelected(mode: ThemeMode) {
+        updateSettings({ it.copy(themeMode = mode) }) { repository.setThemeMode(mode) }
+    }
+
+    fun onDynamicColorChanged(enabled: Boolean) {
+        updateSettings({ it.copy(dynamicColor = enabled) }) { repository.setDynamicColor(enabled) }
+    }
+
+    fun onAutoSearchMillisSelected(millis: Long) {
+        // A countdown already on screen was started with the old delay; drop it rather than
+        // letting it finish on a value the user just changed.
+        cancelCountdown()
+        updateSettings({ it.copy(autoSearchMillis = millis) }) { repository.setAutoSearchMillis(millis) }
+    }
+
+    /** Applies the change to state at once so controls react, then persists it. */
+    private inline fun updateSettings(
+        crossinline transform: (VoiceSettings) -> VoiceSettings,
+        crossinline persist: suspend () -> Unit,
+    ) {
+        _uiState.update { it.copy(settings = transform(it.settings)) }
+        viewModelScope.launch { persist() }
     }
 
     fun onClearQuery() {
@@ -258,7 +341,6 @@ class VoiceSearchViewModel(app: Application) : AndroidViewModel(app), Recognitio
     }
 
     private companion object {
-        const val COUNTDOWN_MS = 2000L
         const val STEP_MS = 50L
     }
 }

@@ -3,10 +3,12 @@ package com.kotlin.voice
 import android.app.Activity
 import android.graphics.Color
 import android.util.Log
+import android.view.View
 import androidx.activity.ComponentActivity
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.IntentSenderRequest
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.annotation.StringRes
 import com.google.android.material.snackbar.Snackbar
 import com.google.android.play.core.appupdate.AppUpdateInfo
 import com.google.android.play.core.appupdate.AppUpdateManager
@@ -22,68 +24,62 @@ class InAppUpdate(private val activity: ComponentActivity) : InstallStateUpdated
 
     private val appUpdateManager: AppUpdateManager = AppUpdateManagerFactory.create(activity)
 
-    private var currentType = AppUpdateType.FLEXIBLE
+    // Only decides whether a *cancelled* flow is worth re-offering. Resuming an interrupted update
+    // is decided from AppUpdateInfo instead, because that survives process death and this does not.
+    private var lastRequestedType = AppUpdateType.FLEXIBLE
 
     // Registered before the activity reaches STARTED (constructed in onCreate). Replaces the
     // deprecated startUpdateFlowForResult(info, type, activity, requestCode) + onActivityResult path.
     private val updateLauncher: ActivityResultLauncher<IntentSenderRequest> =
         activity.registerForActivityResult(ActivityResultContracts.StartIntentSenderForResult()) { result ->
-            if (result.resultCode != Activity.RESULT_OK) {
-                // If the update is canceled or fails, you can request to start the update again.
-                Log.e("InAppUpdate", "Update flow failed! Result code: ${result.resultCode}")
+            when (result.resultCode) {
+                Activity.RESULT_OK -> Unit
+                // Backing out of a flexible update is a fair choice, so don't nag. An immediate
+                // update was deliberate on our side, so offer it again rather than dropping it.
+                Activity.RESULT_CANCELED ->
+                    if (lastRequestedType == AppUpdateType.IMMEDIATE) {
+                        showSnackbar(R.string.update_cancelled, R.string.update_retry, Snackbar.LENGTH_LONG) {
+                            checkForUpdate()
+                        }
+                    }
+                // RESULT_IN_APP_UPDATE_FAILED (or anything else): it broke, and until now the user
+                // saw nothing at all — only a Log.e that never leaves the device.
+                else -> {
+                    Log.w(TAG, "Update flow failed, result code ${result.resultCode}")
+                    showSnackbar(R.string.update_failed, R.string.update_retry, Snackbar.LENGTH_LONG) {
+                        checkForUpdate()
+                    }
+                }
             }
         }
 
     init {
-        appUpdateManager.appUpdateInfo.addOnSuccessListener { info ->
-            // Check if update is available
-            if (info.updateAvailability() == UpdateAvailability.UPDATE_AVAILABLE) { // UPDATE IS AVAILABLE
-                if (info.updatePriority() == 5) { // Priority: 5 (Immediate update flow)
-                    if (info.isUpdateTypeAllowed(AppUpdateType.IMMEDIATE)) {
-                        startUpdate(info, AppUpdateType.IMMEDIATE)
-                    }
-                } else if (info.updatePriority() == 4) { // Priority: 4
-                    val clientVersionStalenessDays = info.clientVersionStalenessDays()
-                    if (clientVersionStalenessDays != null && clientVersionStalenessDays >= 5 && info.isUpdateTypeAllowed(AppUpdateType.IMMEDIATE)) {
-                        // Trigger IMMEDIATE flow
-                        startUpdate(info, AppUpdateType.IMMEDIATE)
-                    } else if (clientVersionStalenessDays != null && clientVersionStalenessDays >= 3 && info.isUpdateTypeAllowed(AppUpdateType.FLEXIBLE)) {
-                        // Trigger FLEXIBLE flow
-                        startUpdate(info, AppUpdateType.FLEXIBLE)
-                    }
-                } else if (info.updatePriority() == 3) { // Priority: 3
-                    val clientVersionStalenessDays = info.clientVersionStalenessDays()
-                    if (clientVersionStalenessDays != null && clientVersionStalenessDays >= 30 && info.isUpdateTypeAllowed(AppUpdateType.IMMEDIATE)) {
-                        // Trigger IMMEDIATE flow
-                        startUpdate(info, AppUpdateType.IMMEDIATE)
-                    } else if (clientVersionStalenessDays != null && clientVersionStalenessDays >= 15 && info.isUpdateTypeAllowed(AppUpdateType.FLEXIBLE)) {
-                        // Trigger FLEXIBLE flow
-                        startUpdate(info, AppUpdateType.FLEXIBLE)
-                    }
-                } else if (info.updatePriority() == 2) { // Priority: 2
-                    val clientVersionStalenessDays = info.clientVersionStalenessDays()
-                    if (clientVersionStalenessDays != null && clientVersionStalenessDays >= 90 && info.isUpdateTypeAllowed(AppUpdateType.IMMEDIATE)) {
-                        // Trigger IMMEDIATE flow
-                        startUpdate(info, AppUpdateType.IMMEDIATE)
-                    } else if (clientVersionStalenessDays != null && clientVersionStalenessDays >= 30 && info.isUpdateTypeAllowed(AppUpdateType.FLEXIBLE)) {
-                        // Trigger FLEXIBLE flow
-                        startUpdate(info, AppUpdateType.FLEXIBLE)
-                    }
-                } else if (info.updatePriority() == 1) { // Priority: 1
-                    // Trigger FLEXIBLE flow
-                    startUpdate(info, AppUpdateType.FLEXIBLE)
-                } else { // Priority: 0
-                    // Do not show in-app update
-                }
-            } else {
-                // UPDATE IS NOT AVAILABLE
-            }
-        }
+        checkForUpdate()
         appUpdateManager.registerListener(this)
     }
 
+    private fun checkForUpdate() {
+        appUpdateManager.appUpdateInfo
+            .addOnSuccessListener { info ->
+                if (info.updateAvailability() != UpdateAvailability.UPDATE_AVAILABLE) {
+                    return@addOnSuccessListener
+                }
+                val type = updateFlowFor(
+                    priority = info.updatePriority(),
+                    stalenessDays = info.clientVersionStalenessDays(),
+                    immediateAllowed = info.isUpdateTypeAllowed(AppUpdateType.IMMEDIATE),
+                    flexibleAllowed = info.isUpdateTypeAllowed(AppUpdateType.FLEXIBLE),
+                )
+                if (type != null) startUpdate(info, type)
+            }
+            .addOnFailureListener { error ->
+                // Sideloaded build, no Play Store, no network — nothing the user can act on.
+                Log.w(TAG, "Update check failed", error)
+            }
+    }
+
     private fun startUpdate(info: AppUpdateInfo, type: Int) {
-        currentType = type
+        lastRequestedType = type
         appUpdateManager.startUpdateFlowForResult(
             info,
             updateLauncher,
@@ -92,28 +88,46 @@ class InAppUpdate(private val activity: ComponentActivity) : InstallStateUpdated
     }
 
     fun onResume() {
-        appUpdateManager.appUpdateInfo.addOnSuccessListener { info ->
-            if (currentType == AppUpdateType.FLEXIBLE) {
-                // If the update is downloaded but not installed, notify the user to complete the update.
-                if (info.installStatus() == InstallStatus.DOWNLOADED)
-                    flexibleUpdateDownloadCompleted()
-            } else if (currentType == AppUpdateType.IMMEDIATE) {
-                // for AppUpdateType.IMMEDIATE only, already executing updater
+        appUpdateManager.appUpdateInfo
+            .addOnSuccessListener { info ->
+                // Both checks read the real state from Play rather than an in-memory flag: after
+                // process death mid-update, this process remembers nothing about which flow ran.
                 if (info.updateAvailability() == UpdateAvailability.DEVELOPER_TRIGGERED_UPDATE_IN_PROGRESS) {
+                    // An IMMEDIATE update was interrupted and must be carried to completion.
                     startUpdate(info, AppUpdateType.IMMEDIATE)
+                } else if (info.installStatus() == InstallStatus.DOWNLOADED) {
+                    // A FLEXIBLE update finished downloading while we were away.
+                    flexibleUpdateDownloadCompleted()
                 }
             }
-        }
+            .addOnFailureListener { error ->
+                Log.w(TAG, "Update info check on resume failed", error)
+            }
     }
 
     private fun flexibleUpdateDownloadCompleted() {
-        val rootView = activity.findViewById<android.view.View>(android.R.id.content)
-        Snackbar.make(
-            rootView,
-            "An update has just been downloaded.",
-            Snackbar.LENGTH_INDEFINITE
-        ).apply {
-            setAction("RESTART") { appUpdateManager.completeUpdate() }
+        showSnackbar(R.string.update_downloaded, R.string.update_restart, Snackbar.LENGTH_INDEFINITE) {
+            appUpdateManager.completeUpdate()
+                .addOnFailureListener { error ->
+                    Log.w(TAG, "completeUpdate failed", error)
+                    showSnackbar(R.string.update_failed, R.string.update_retry, Snackbar.LENGTH_LONG) {
+                        checkForUpdate()
+                    }
+                }
+        }
+    }
+
+    private fun showSnackbar(
+        @StringRes message: Int,
+        @StringRes actionLabel: Int,
+        duration: Int,
+        action: () -> Unit,
+    ) {
+        // These arrive from asynchronous Play callbacks, which can outlive the activity.
+        if (activity.isFinishing || activity.isDestroyed) return
+        val rootView: View = activity.findViewById(android.R.id.content) ?: return
+        Snackbar.make(rootView, activity.getString(message), duration).apply {
+            setAction(activity.getString(actionLabel)) { action() }
             setActionTextColor(Color.WHITE)
             show()
         }
@@ -124,8 +138,61 @@ class InAppUpdate(private val activity: ComponentActivity) : InstallStateUpdated
     }
 
     override fun onStateUpdate(state: InstallState) {
-        if (state.installStatus() == InstallStatus.DOWNLOADED) {
-            flexibleUpdateDownloadCompleted()
+        when (state.installStatus()) {
+            InstallStatus.DOWNLOADED -> flexibleUpdateDownloadCompleted()
+            // Previously silent: a download that died left the user waiting for a restart prompt
+            // that was never coming.
+            InstallStatus.FAILED -> {
+                Log.w(TAG, "Update install failed, error code ${state.installErrorCode()}")
+                showSnackbar(R.string.update_failed, R.string.update_retry, Snackbar.LENGTH_LONG) {
+                    checkForUpdate()
+                }
+            }
+            else -> Unit
         }
     }
+
+    private companion object {
+        const val TAG = "InAppUpdate"
+    }
 }
+
+/**
+ * The release policy: how stale a client must be, at each Play Console update priority, before the
+ * app interrupts — and with which flow. Null means leave the user alone.
+ *
+ * Thresholds are the ones this app has always shipped. A staleness Play does not report counts as
+ * "not stale", so a freshly published release only interrupts at priority 5. When the store
+ * disallows the escalated flow the gentler one still runs, which is what the original chain of
+ * if/else did by falling through.
+ *
+ * Pure and internal so the policy can be tested without a Play Store; [InAppUpdate] only supplies
+ * the inputs and acts on the answer.
+ */
+internal fun updateFlowFor(
+    priority: Int,
+    stalenessDays: Int?,
+    immediateAllowed: Boolean,
+    flexibleAllowed: Boolean,
+): Int? {
+    val staleness = stalenessDays ?: NOT_STALE
+    val immediate = if (immediateAllowed) AppUpdateType.IMMEDIATE else null
+    val flexible = if (flexibleAllowed) AppUpdateType.FLEXIBLE else null
+
+    fun escalate(immediateAfter: Int, flexibleAfter: Int): Int? = when {
+        staleness >= immediateAfter -> immediate ?: flexible
+        staleness >= flexibleAfter -> flexible
+        else -> null
+    }
+
+    return when (priority) {
+        5 -> immediate
+        4 -> escalate(immediateAfter = 5, flexibleAfter = 3)
+        3 -> escalate(immediateAfter = 30, flexibleAfter = 15)
+        2 -> escalate(immediateAfter = 90, flexibleAfter = 30)
+        1 -> flexible
+        else -> null // Priority 0, or anything Play adds later: never interrupt.
+    }
+}
+
+private const val NOT_STALE = -1

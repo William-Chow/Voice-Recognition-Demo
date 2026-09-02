@@ -1,10 +1,24 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+  Mirrors the Compose palette in ui/theme/Theme.kt. These drive everything Compose does NOT paint:
+  the launch window, the system bars below API 35, and the View-based Snackbar in InAppUpdate.
+  Surface/onSurface match Material 3's own light and dark defaults, which is what
+  lightColorScheme()/darkColorScheme() give Compose for the roles Theme.kt doesn't override.
+-->
 <resources>
-    <color name="purple_200">#FFBB86FC</color>
-    <color name="purple_500">#FF6200EE</color>
-    <color name="purple_700">#FF3700B3</color>
-    <color name="teal_200">#FF03DAC5</color>
-    <color name="teal_700">#FF018786</color>
-    <color name="black">#FF000000</color>
-    <color name="white">#FFFFFFFF</color>
+    <!-- Light -->
+    <color name="brand_primary">#FF5B4CE0</color>
+    <color name="brand_on_primary">#FFFFFFFF</color>
+    <color name="brand_secondary">#FF00A9A5</color>
+    <color name="brand_on_secondary">#FFFFFFFF</color>
+    <color name="surface_light">#FFFFFBFE</color>
+    <color name="on_surface_light">#FF1C1B1F</color>
+
+    <!-- Dark -->
+    <color name="brand_primary_dark">#FFBFB4FF</color>
+    <color name="brand_on_primary_dark">#FF371E73</color>
+    <color name="brand_secondary_dark">#FF52DAD5</color>
+    <color name="brand_on_secondary_dark">#FF332D41</color>
+    <color name="surface_dark">#FF1C1B1F</color>
+    <color name="on_surface_dark">#FFE6E1E5</color>
 </resources>

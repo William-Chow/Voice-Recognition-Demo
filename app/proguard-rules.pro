@@ -19,3 +19,7 @@
 # If you keep the line number information, uncomment this to
 # hide the original source file name.
 #-renamesourcefileattribute SourceFile
+# Crashlytics de-obfuscates release stack traces from the uploaded mapping file, but only if R8
+# keeps the source/line attributes. Without these, every release crash reports as a bare class name.
+-keepattributes SourceFile,LineNumberTable
+-renamesourcefileattribute SourceFile
