@@ -1,19 +1,16 @@
-<?xml version="1.0" encoding="utf-8"?><!--
-   Sample data extraction rules file; uncomment and customize as necessary.
-   See https://developer.android.com/about/versions/12/backup-restore#xml-changes
-   for details.
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Android 12+. The two transfer paths get different answers on purpose:
+
+  cloud-backup    search history would sit on Google's servers, so it is excluded.
+  device-transfer stays between the user's own two devices, so the history rides along and a new
+                  phone keeps the engine, language and recent searches.
 -->
 <data-extraction-rules>
     <cloud-backup>
-        <!-- TODO: Use <include> and <exclude> to control what is backed up.
-        <include .../>
-        <exclude .../>
-        -->
+        <exclude domain="file" path="datastore/voice_search.preferences_pb" />
     </cloud-backup>
-    <!--
     <device-transfer>
-        <include .../>
-        <exclude .../>
+        <!-- Everything, including the history: this never leaves the user's own hardware. -->
     </device-transfer>
-    -->
 </data-extraction-rules>
