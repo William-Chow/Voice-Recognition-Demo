@@ -79,6 +79,7 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -831,15 +832,19 @@ private fun AdBannerView(modifier: Modifier = Modifier) {
         onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
     }
 
-    AndroidView(
-        factory = { adView },
-        // Scaffold does not inset arbitrary bottomBar content, so on edge-to-edge devices the
-        // gesture bar is drawn over the ad. Besides looking broken, AdMob requires that ads
-        // not be obscured.
-        modifier = modifier
-            .fillMaxWidth()
-            .navigationBarsPadding(),
-    )
+    // AndroidView runs its factory only once, so a width change would leave the old, already
+    // destroyed AdView on screen. Keying on adView gives each new AdView a fresh node.
+    key(adView) {
+        AndroidView(
+            factory = { adView },
+            // Scaffold does not inset arbitrary bottomBar content, so on edge-to-edge devices the
+            // gesture bar is drawn over the ad. Besides looking broken, AdMob requires that ads
+            // not be obscured.
+            modifier = modifier
+                .fillMaxWidth()
+                .navigationBarsPadding(),
+        )
+    }
 }
 
 private tailrec fun Context.findActivity(): Activity? = when (this) {
