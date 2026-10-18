@@ -90,14 +90,18 @@ class InAppUpdate(private val activity: ComponentActivity) : InstallStateUpdated
     fun onResume() {
         appUpdateManager.appUpdateInfo
             .addOnSuccessListener { info ->
-                // Both checks read the real state from Play rather than an in-memory flag: after
+                // Decided from the real state Play reports rather than an in-memory flag: after
                 // process death mid-update, this process remembers nothing about which flow ran.
-                if (info.updateAvailability() == UpdateAvailability.DEVELOPER_TRIGGERED_UPDATE_IN_PROGRESS) {
-                    // An IMMEDIATE update was interrupted and must be carried to completion.
-                    startUpdate(info, AppUpdateType.IMMEDIATE)
-                } else if (info.installStatus() == InstallStatus.DOWNLOADED) {
-                    // A FLEXIBLE update finished downloading while we were away.
-                    flexibleUpdateDownloadCompleted()
+                val action = resumeActionFor(
+                    updateAvailability = info.updateAvailability(),
+                    installStatus = info.installStatus(),
+                    priority = info.updatePriority(),
+                    stalenessDays = info.clientVersionStalenessDays(),
+                )
+                when (action) {
+                    ResumeAction.RESUME_IMMEDIATE -> startUpdate(info, AppUpdateType.IMMEDIATE)
+                    ResumeAction.PROMPT_RESTART -> flexibleUpdateDownloadCompleted()
+                    ResumeAction.NONE -> Unit
                 }
             }
             .addOnFailureListener { error ->
@@ -196,3 +200,35 @@ internal fun updateFlowFor(
 }
 
 private const val NOT_STALE = -1
+
+/** What returning to the foreground should do about an update this app already started. */
+internal enum class ResumeAction { RESUME_IMMEDIATE, PROMPT_RESTART, NONE }
+
+/**
+ * Play reports DEVELOPER_TRIGGERED_UPDATE_IN_PROGRESS for *any* update the app started, flexible
+ * included, from PENDING all the way to DOWNLOADED — Google's own FakeAppUpdateManager models it
+ * that way — and never says which flow it was. Treating that state as "an IMMEDIATE update was
+ * interrupted" turned every background flexible download into the full-screen flow, and left the
+ * DOWNLOADED restart prompt unreachable.
+ *
+ * So the flow is re-derived from [updateFlowFor]: the same release inputs give the same answer,
+ * and they survive process death. Only an update the policy would force is resumed as IMMEDIATE.
+ * The allowed-type flags are not consulted, because Play may stop offering them once an update is
+ * under way. A flexible update the policy has since escalated (it went stale enough while
+ * downloading) is resumed as IMMEDIATE too, exactly as a fresh check would have chosen.
+ */
+internal fun resumeActionFor(
+    updateAvailability: Int,
+    installStatus: Int,
+    priority: Int,
+    stalenessDays: Int?,
+): ResumeAction {
+    val inProgress = updateAvailability == UpdateAvailability.DEVELOPER_TRIGGERED_UPDATE_IN_PROGRESS
+    val forced = updateFlowFor(priority, stalenessDays, immediateAllowed = true, flexibleAllowed = true) ==
+        AppUpdateType.IMMEDIATE
+    return when {
+        inProgress && forced -> ResumeAction.RESUME_IMMEDIATE
+        installStatus == InstallStatus.DOWNLOADED -> ResumeAction.PROMPT_RESTART
+        else -> ResumeAction.NONE
+    }
+}

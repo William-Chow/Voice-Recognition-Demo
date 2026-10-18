@@ -1,6 +1,8 @@
 package com.kotlin.voice
 
 import com.google.android.play.core.install.model.AppUpdateType
+import com.google.android.play.core.install.model.InstallStatus
+import com.google.android.play.core.install.model.UpdateAvailability
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Test
@@ -102,5 +104,58 @@ class UpdatePolicyTest {
     fun `a priority Play might add later is treated as do-nothing`() {
         assertNull(policy(6, staleness = 9_999))
         assertNull(policy(-1, staleness = 9_999))
+    }
+
+    // Play reports an update the app started as in progress whichever flow it was.
+    private fun onResume(
+        priority: Int,
+        installStatus: Int,
+        staleness: Int? = null,
+        availability: Int = UpdateAvailability.DEVELOPER_TRIGGERED_UPDATE_IN_PROGRESS,
+    ): ResumeAction = resumeActionFor(availability, installStatus, priority, staleness)
+
+    @Test
+    fun `a flexible download in progress is left to finish, not made full-screen`() {
+        assertEquals(ResumeAction.NONE, onResume(priority = 1, installStatus = InstallStatus.PENDING))
+        assertEquals(ResumeAction.NONE, onResume(priority = 1, installStatus = InstallStatus.DOWNLOADING))
+        assertEquals(ResumeAction.NONE, onResume(priority = 4, installStatus = InstallStatus.DOWNLOADING, staleness = 3))
+    }
+
+    @Test
+    fun `a finished flexible download offers the restart`() {
+        assertEquals(ResumeAction.PROMPT_RESTART, onResume(priority = 1, installStatus = InstallStatus.DOWNLOADED))
+        assertEquals(
+            ResumeAction.PROMPT_RESTART,
+            onResume(priority = 2, installStatus = InstallStatus.DOWNLOADED, staleness = 30),
+        )
+    }
+
+    @Test
+    fun `an interrupted immediate update is carried to completion`() {
+        assertEquals(ResumeAction.RESUME_IMMEDIATE, onResume(priority = 5, installStatus = InstallStatus.DOWNLOADING))
+        assertEquals(ResumeAction.RESUME_IMMEDIATE, onResume(priority = 5, installStatus = InstallStatus.DOWNLOADED))
+        assertEquals(
+            ResumeAction.RESUME_IMMEDIATE,
+            onResume(priority = 3, installStatus = InstallStatus.PENDING, staleness = 30),
+        )
+    }
+
+    @Test
+    fun `a flexible update that has since gone stale enough is escalated`() {
+        // Started flexible at three days; at five, priority 4 calls for immediate.
+        assertEquals(
+            ResumeAction.RESUME_IMMEDIATE,
+            onResume(priority = 4, installStatus = InstallStatus.DOWNLOADED, staleness = 5),
+        )
+    }
+
+    @Test
+    fun `nothing is resumed when no update is under way`() {
+        for (availability in listOf(UpdateAvailability.UPDATE_AVAILABLE, UpdateAvailability.UPDATE_NOT_AVAILABLE)) {
+            assertEquals(
+                ResumeAction.NONE,
+                onResume(priority = 5, installStatus = InstallStatus.UNKNOWN, availability = availability),
+            )
+        }
     }
 }
