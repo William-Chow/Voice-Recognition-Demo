@@ -1,9 +1,6 @@
 # Privacy Policy — Voice Search
 
-**Draft.** Review this and have it checked before publishing; it must be hosted at a public URL
-and linked from the Play Console listing.
-
-_Last updated: 2 September 2026_
+_Last updated: 28 October 2026_
 
 ## What the app collects
 
@@ -21,8 +18,8 @@ Google cloud backup; they transfer only if you move directly to a new device.
 device model, OS version, and a random installation identifier. This is used only to fix bugs.
 
 **Ads.** The app shows banner ads through Google AdMob, which may use your advertising ID. In the
-EEA and the UK you are asked for consent before any ad is requested, and you can change that
-choice at any time.
+EEA, the UK and Switzerland you are asked for consent before any ad is requested, and you can
+change that choice at any time (see below).
 
 ## What the app does not do
 
@@ -33,8 +30,9 @@ is transmitted to the developer.
 
 - Revoke microphone access at any time in Android Settings → Apps → Voice → Permissions.
 - Clear stored searches with "Clear all" on the home screen.
-- Reset your ads consent choice from the AdMob consent form.
+- In the EEA, the UK and Switzerland, review or change your ads consent choice at any time in the
+  app under Settings → Ad privacy settings.
 
 ## Contact
 
-Questions about this policy: <add a contact address before publishing>
+Questions about this policy: work.dash10101@gmail.com
