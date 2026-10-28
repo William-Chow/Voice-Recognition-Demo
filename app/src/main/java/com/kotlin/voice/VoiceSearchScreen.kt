@@ -141,6 +141,7 @@ fun VoiceSearchScreen(
     }
 
     val activity = remember(context) { context.findActivity() }
+    val adPrivacyRequired by AdsConsent.privacyOptionsRequired.collectAsStateWithLifecycle()
     var showRationale by remember { mutableStateOf(false) }
     var showBlocked by remember { mutableStateOf(false) }
 
@@ -199,6 +200,8 @@ fun VoiceSearchScreen(
         onThemeModeSelected = viewModel::onThemeModeSelected,
         onDynamicColorChanged = viewModel::onDynamicColorChanged,
         onAutoSearchMillisSelected = viewModel::onAutoSearchMillisSelected,
+        showAdPrivacyOptions = adPrivacyRequired && activity != null,
+        onAdPrivacyOptions = { activity?.let(AdsConsent::showPrivacyOptions) },
         onSearchNow = viewModel::searchNow,
         onCancelCountdown = viewModel::cancelCountdown,
         onClearQuery = viewModel::onClearQuery,
@@ -240,6 +243,8 @@ private fun VoiceSearchContent(
     onThemeModeSelected: (ThemeMode) -> Unit,
     onDynamicColorChanged: (Boolean) -> Unit,
     onAutoSearchMillisSelected: (Long) -> Unit,
+    showAdPrivacyOptions: Boolean,
+    onAdPrivacyOptions: () -> Unit,
     onSearchNow: () -> Unit,
     onCancelCountdown: () -> Unit,
     onClearQuery: () -> Unit,
@@ -255,6 +260,8 @@ private fun VoiceSearchContent(
             onThemeModeSelected = onThemeModeSelected,
             onDynamicColorChanged = onDynamicColorChanged,
             onAutoSearchMillisSelected = onAutoSearchMillisSelected,
+            showAdPrivacyOptions = showAdPrivacyOptions,
+            onAdPrivacyOptions = onAdPrivacyOptions,
             onDismiss = { showSettings = false },
         )
     }
@@ -517,6 +524,8 @@ private fun SettingsSheet(
     onThemeModeSelected: (ThemeMode) -> Unit,
     onDynamicColorChanged: (Boolean) -> Unit,
     onAutoSearchMillisSelected: (Long) -> Unit,
+    showAdPrivacyOptions: Boolean,
+    onAdPrivacyOptions: () -> Unit,
     onDismiss: () -> Unit,
 ) {
     ModalBottomSheet(onDismissRequest = onDismiss) {
@@ -585,6 +594,28 @@ private fun SettingsSheet(
                     }
                     Spacer(Modifier.width(12.dp))
                     Switch(checked = settings.dynamicColor, onCheckedChange = onDynamicColorChanged)
+                }
+            }
+
+            // Only where a consent choice was asked for. The consent message tells people to look
+            // for this in the app, and Google's EU consent policy requires that it exists.
+            if (showAdPrivacyOptions) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(12.dp))
+                        .clickable(onClick = onAdPrivacyOptions)
+                        .padding(vertical = 8.dp),
+                ) {
+                    Text(
+                        text = stringResource(R.string.settings_ad_privacy),
+                        style = MaterialTheme.typography.bodyLarge,
+                    )
+                    Text(
+                        text = stringResource(R.string.settings_ad_privacy_body),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
                 }
             }
         }
@@ -903,6 +934,8 @@ private fun PreviewContent() {
         onThemeModeSelected = {},
         onDynamicColorChanged = {},
         onAutoSearchMillisSelected = {},
+        showAdPrivacyOptions = false,
+        onAdPrivacyOptions = {},
         onSearchNow = {},
         onCancelCountdown = {},
         onClearQuery = {},
