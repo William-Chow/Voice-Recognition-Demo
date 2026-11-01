@@ -4,6 +4,7 @@ import android.app.Activity
 import android.content.Context
 import android.util.Log
 import com.google.android.gms.ads.MobileAds
+import com.google.android.ump.ConsentInformation
 import com.google.android.ump.ConsentRequestParameters
 import com.google.android.ump.UserMessagingPlatform
 import kotlinx.coroutines.CoroutineScope
@@ -27,6 +28,10 @@ import java.util.concurrent.atomic.AtomicBoolean
  *
  * Requires a GDPR message published in the AdMob console under Privacy & messaging. Without one,
  * `canRequestAds()` stays false in the EEA and the banner simply never appears.
+ *
+ * Where a choice was asked for, Google's EU consent policy also requires a way back to it, and the
+ * consent message itself tells people to look for one in the app. [privacyOptionsRequired] says
+ * when Settings must offer it, and [showPrivacyOptions] opens the form.
  */
 object AdsConsent {
 
@@ -37,6 +42,11 @@ object AdsConsent {
 
     /** True once consent (where required) is on file and the ads SDK has finished initialising. */
     val canRequestAds: StateFlow<Boolean> = _canRequestAds.asStateFlow()
+
+    private val _privacyOptionsRequired = MutableStateFlow(false)
+
+    /** True when this user must be able to revisit their consent choice (EEA, UK, Switzerland). */
+    val privacyOptionsRequired: StateFlow<Boolean> = _privacyOptionsRequired.asStateFlow()
 
     fun gather(activity: Activity) {
         val consentInformation = UserMessagingPlatform.getConsentInformation(activity)
@@ -52,15 +62,32 @@ object AdsConsent {
                     if (formError != null) {
                         Log.w(TAG, "Consent form failed: ${formError.errorCode} ${formError.message}")
                     }
-                    if (consentInformation.canRequestAds()) initializeAds(activity)
+                    applyConsentState(activity, consentInformation)
                 }
             },
             { requestError ->
                 // Network or config failure — fall back to the consent state already cached on device.
                 Log.w(TAG, "Consent info update failed: ${requestError.errorCode} ${requestError.message}")
-                if (consentInformation.canRequestAds()) initializeAds(activity)
+                applyConsentState(activity, consentInformation)
             },
         )
+    }
+
+    /** Opens Google's form for reviewing or changing the consent choice. */
+    fun showPrivacyOptions(activity: Activity) {
+        UserMessagingPlatform.showPrivacyOptionsForm(activity) { formError ->
+            if (formError != null) {
+                Log.w(TAG, "Privacy options form failed: ${formError.errorCode} ${formError.message}")
+            }
+            // A choice made here can allow ads that were not allowed before.
+            applyConsentState(activity, UserMessagingPlatform.getConsentInformation(activity))
+        }
+    }
+
+    private fun applyConsentState(activity: Activity, consentInformation: ConsentInformation) {
+        _privacyOptionsRequired.value = consentInformation.privacyOptionsRequirementStatus ==
+            ConsentInformation.PrivacyOptionsRequirementStatus.REQUIRED
+        if (consentInformation.canRequestAds()) initializeAds(activity)
     }
 
     private fun initializeAds(context: Context) {

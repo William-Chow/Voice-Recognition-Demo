@@ -47,6 +47,8 @@
     <string name="theme_dark">深色</string>
     <string name="settings_dynamic_color">使用壁纸取色</string>
     <string name="settings_dynamic_color_body">让应用配色跟随你的壁纸</string>
+    <string name="settings_ad_privacy">广告隐私设置</string>
+    <string name="settings_ad_privacy_body">查看或更改广告如何使用你的数据</string>
 
     <!-- Errors / permissions -->
     <string name="permission_title">麦克风权限</string>

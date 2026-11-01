@@ -48,6 +48,8 @@
     <string name="theme_dark">Dark</string>
     <string name="settings_dynamic_color">Use wallpaper colours</string>
     <string name="settings_dynamic_color_body">Match the app to your wallpaper</string>
+    <string name="settings_ad_privacy">Ad privacy settings</string>
+    <string name="settings_ad_privacy_body">Review or change how ads use your data</string>
 
     <!-- Errors / permissions -->
     <string name="permission_title">Microphone access</string>
