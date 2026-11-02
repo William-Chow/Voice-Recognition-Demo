@@ -61,6 +61,7 @@
     <string name="not_now">Not now</string>
     <string name="speech_not_supported">Speech recognition isn\'t available on this device.</string>
     <string name="speech_no_match">Didn\'t catch that — try again.</string>
+    <string name="speech_language_unavailable">Language not available. Try another speech language.</string>
     <string name="speech_error">Something went wrong. Please try again.</string>
     <string name="browser_not_found">No app found to open the search.</string>
 

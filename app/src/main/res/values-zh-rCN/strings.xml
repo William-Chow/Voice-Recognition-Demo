@@ -60,6 +60,7 @@
     <string name="not_now">暂不</string>
     <string name="speech_not_supported">此设备不支持语音识别。</string>
     <string name="speech_no_match">没有听清，请再说一次。</string>
+    <string name="speech_language_unavailable">此语言暂时无法识别，请换一个识别语言。</string>
     <string name="speech_error">出了点问题，请重试。</string>
     <string name="browser_not_found">没有可以打开搜索结果的应用。</string>
 

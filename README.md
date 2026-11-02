@@ -46,7 +46,7 @@ Crashlytics collection off, so development never touches live ads or the crash d
 ./gradlew :app:testDebugUnitTest
 ```
 
-66 unit tests covering URL building and encoding, the preferences/history repository, the
+67 unit tests covering URL building and encoding, the preferences/history repository, the
 in-app update policy (including what to resume on return), and the ViewModel (countdown, the stop-then-late-result race, offline retry,
 language and engine persistence). Robolectric is used where an Android API is unavoidable; the repository tests run
 against a throwaway DataStore file.

@@ -183,6 +183,22 @@ class VoiceSearchViewModelTest {
     }
 
     @Test
+    fun `an unavailable language says to pick another one`() = runTest {
+        val app = ApplicationProvider.getApplicationContext<Application>()
+        val expected = VoiceEffect.ShowMessage(app.getString(R.string.speech_language_unavailable))
+
+        for (error in listOf(SpeechRecognizer.ERROR_LANGUAGE_NOT_SUPPORTED, SpeechRecognizer.ERROR_LANGUAGE_UNAVAILABLE)) {
+            val viewModel = createViewModel()
+            val effects = collectEffects(viewModel)
+
+            viewModel.onError(error)
+            advanceUntilIdle()
+
+            assertEquals("error $error", listOf(expected), effects)
+        }
+    }
+
+    @Test
     fun `a busy recognizer is treated as transient and stays silent`() = runTest {
         val viewModel = createViewModel()
         val effects = collectEffects(viewModel)

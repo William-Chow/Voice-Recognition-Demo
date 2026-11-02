@@ -60,6 +60,7 @@
     <string name="not_now">暫不</string>
     <string name="speech_not_supported">此裝置不支援語音辨識。</string>
     <string name="speech_no_match">沒有聽清楚，請再說一次。</string>
+    <string name="speech_language_unavailable">此語言暫時無法辨識，請換一個辨識語言。</string>
     <string name="speech_error">發生問題，請再試一次。</string>
     <string name="browser_not_found">找不到可開啟搜尋結果的應用程式。</string>
 

@@ -201,6 +201,10 @@ class VoiceSearchViewModel @JvmOverloads constructor(
             SpeechRecognizer.ERROR_NO_MATCH,
             SpeechRecognizer.ERROR_SPEECH_TIMEOUT -> context.getString(R.string.speech_no_match)
             SpeechRecognizer.ERROR_INSUFFICIENT_PERMISSIONS -> context.getString(R.string.permission_denied)
+            // The recognizer can't do this language (or its offline pack is missing). Only the user
+            // can fix that, by picking another language, so say so rather than "something went wrong".
+            SpeechRecognizer.ERROR_LANGUAGE_NOT_SUPPORTED,
+            SpeechRecognizer.ERROR_LANGUAGE_UNAVAILABLE -> context.getString(R.string.speech_language_unavailable)
             SpeechRecognizer.ERROR_RECOGNIZER_BUSY -> return // transient; ignore
             else -> context.getString(R.string.speech_error)
         }
