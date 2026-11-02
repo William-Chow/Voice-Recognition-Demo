@@ -846,7 +846,11 @@ private fun AdBannerView(modifier: Modifier = Modifier) {
 
     val adView = remember(widthDp) {
         AdView(context).apply {
-            val size = AdSize.getLargeAnchoredAdaptiveBannerAdSize(context, widthDp.value.toInt())
+            // Deprecated in Ads 25 in favour of getLargeAnchoredAdaptiveBannerAdSize, but that serves
+            // tall creatives (a 300x250 block in testing) that swamp this screen. Keep the thin
+            // full-width strip 6.0 shipped with until the large size is a deliberate choice.
+            @Suppress("DEPRECATION")
+            val size = AdSize.getCurrentOrientationAnchoredAdaptiveBannerAdSize(context, widthDp.value.toInt())
             setAdSize(size)
             adUnitId = bannerUnitId
             loadAd(AdRequest.Builder().build())
