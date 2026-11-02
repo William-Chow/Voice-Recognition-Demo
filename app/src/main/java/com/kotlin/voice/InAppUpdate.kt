@@ -130,11 +130,10 @@ class InAppUpdate(private val activity: ComponentActivity) : InstallStateUpdated
         // These arrive from asynchronous Play callbacks, which can outlive the activity.
         if (activity.isFinishing || activity.isDestroyed) return
         val rootView: View = activity.findViewById(android.R.id.content) ?: return
-        Snackbar.make(rootView, activity.getString(message), duration).apply {
-            setAction(activity.getString(actionLabel)) { action() }
-            setActionTextColor(Color.WHITE)
-            show()
-        }
+        Snackbar.make(rootView, activity.getString(message), duration)
+            .setAction(activity.getString(actionLabel)) { action() }
+            .setActionTextColor(Color.WHITE)
+            .show()
     }
 
     fun onDestroy() {

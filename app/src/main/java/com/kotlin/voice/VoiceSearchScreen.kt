@@ -4,6 +4,7 @@ import android.Manifest
 import android.app.Activity
 import android.os.Build
 import android.content.ActivityNotFoundException
+import android.content.ClipData
 import android.content.Context
 import android.content.ContextWrapper
 import android.content.Intent
@@ -81,6 +82,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
@@ -88,14 +90,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.platform.ClipEntry
+import androidx.compose.ui.platform.LocalClipboard
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
@@ -116,6 +118,7 @@ import com.google.android.gms.ads.AdRequest
 import com.google.android.gms.ads.AdSize
 import com.google.android.gms.ads.AdView
 import com.kotlin.voice.ui.theme.VoiceTheme
+import kotlinx.coroutines.launch
 
 @Composable
 fun VoiceSearchScreen(
@@ -435,7 +438,9 @@ private fun ResultCard(
     onClearQuery: () -> Unit,
 ) {
     val context = LocalContext.current
-    val clipboard = LocalClipboardManager.current
+    val clipboard = LocalClipboard.current
+    val scope = rememberCoroutineScope()
+    val clipLabel = stringResource(R.string.your_search)
 
     ElevatedCard(modifier = Modifier.fillMaxWidth()) {
         Column(
@@ -500,7 +505,8 @@ private fun ResultCard(
 
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 TextButton(onClick = {
-                    clipboard.setText(AnnotatedString(state.query))
+                    val clip = ClipData.newPlainText(clipLabel, state.query)
+                    scope.launch { clipboard.setClipEntry(ClipEntry(clip)) }
                     Toast.makeText(context, R.string.copied, Toast.LENGTH_SHORT).show()
                 }) {
                     Icon(Icons.Filled.ContentCopy, contentDescription = null, modifier = Modifier.size(18.dp))
@@ -836,12 +842,13 @@ private fun AdBannerView(modifier: Modifier = Modifier) {
     // The window's own width, not the device's: Configuration.screenWidthDp over-reports in
     // split-screen and freeform, which would size the banner wider than the space it gets.
     val widthDp = with(LocalDensity.current) { LocalWindowInfo.current.containerSize.width.toDp() }
+    val bannerUnitId = stringResource(R.string.admob_banner_ad_unit_id)
 
     val adView = remember(widthDp) {
         AdView(context).apply {
-            val size = AdSize.getCurrentOrientationAnchoredAdaptiveBannerAdSize(context, widthDp.value.toInt())
+            val size = AdSize.getLargeAnchoredAdaptiveBannerAdSize(context, widthDp.value.toInt())
             setAdSize(size)
-            adUnitId = context.getString(R.string.admob_banner_ad_unit_id)
+            adUnitId = bannerUnitId
             loadAd(AdRequest.Builder().build())
         }
     }
